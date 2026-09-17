@@ -1,5 +1,4 @@
 from pathlib import Path
-from math import log1p
 
 import pandas as pd
 import plotly.express as px
@@ -49,8 +48,8 @@ year_data = data[data[YEAR_COLUMN] == selected_year]
 coverage = year_data[MEASURE_COLUMN].notna().sum()
 st.caption(f"YEAR {selected_year}  /  {coverage} COUNTRIES WITH REPORTED DATA")
 
-map_data = year_data.assign(**{COLOR_COLUMN: year_data[MEASURE_COLUMN].map(log1p)})
-color_ticks = [0, 5, 10, 15, 20, 25, 30, 35]
+map_data = year_data.assign(**{COLOR_COLUMN: year_data[MEASURE_COLUMN].clip(upper=30)})
+color_ticks = [0, 5, 10, 15, 20, 25, 30]
 
 fig = px.choropleth(
     map_data,
@@ -60,7 +59,7 @@ fig = px.choropleth(
     hover_name=COUNTRY_COLUMN,
     hover_data={MEASURE_COLUMN: ":.2f", COLOR_COLUMN: False},
     color_continuous_scale=["#17324d", "#45b7aa", "#f0d264", "#f08a5d"],
-    range_color=(log1p(float(data[MEASURE_COLUMN].min())), log1p(float(data[MEASURE_COLUMN].max()))),
+    range_color=(0, 30),
     labels={MEASURE_COLUMN: "Unemployment (%)", COLOR_COLUMN: "Unemployment (%)"},
 )
 fig.update_layout(
@@ -71,9 +70,15 @@ fig.update_layout(
 )
 fig.update_coloraxes(
     colorbar={
-        "title": "Unemployment (%)",
-        "tickvals": [log1p(value) for value in color_ticks],
-        "ticktext": [str(value) for value in color_ticks],
+        "title": "Unemployment rate (%)<br>Values above 30% capped",
+        "tickvals": color_ticks,
+        "ticktext": [f"{value}%" for value in color_ticks],
+        "ticks": "outside",
+        "ticklen": 6,
+        "tickwidth": 1,
+        "tickcolor": "#73e6d1",
+        "outlinewidth": 1,
+        "outlinecolor": "#73e6d1",
     }
 )
 fig.update_geos(
@@ -85,6 +90,8 @@ fig.update_geos(
     oceancolor="#07111f",
     showland=True,
     landcolor="#142538",
+    center={"lon": 0, "lat": 0},
+    projection={"type": "natural earth", "rotation": {"lon": 0, "lat": 0}},
 )
 with st.container(border=True):
     st.plotly_chart(fig, width="stretch")
