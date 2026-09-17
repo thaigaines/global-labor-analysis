@@ -67,6 +67,7 @@ fig.update_layout(
 )
 fig.update_geos(
     showframe=False,
+    bgcolor="#07111f",
     showcoastlines=True,
     showcountries=True,
     showocean=True,

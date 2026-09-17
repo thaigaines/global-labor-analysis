@@ -1,14 +1,16 @@
 # Global Labor Analysis
 
-A minimal Streamlit map for exploring unemployment rates across countries from 1991–2022.
-
-## v2 visual direction
-
-The app keeps the v1 interaction model—one map and one year slider—while moving toward a dark editorial presentation inspired by the portfolio site: dark navy canvas, aqua accent, spacious hierarchy, restrained metadata, and the map as the visual anchor. Unemployment remains the only exposed measure; structural sector analysis is reserved for a later phase.
+A minimal Streamlit map for exploring unemployment rates across countries from 1991 to 2022.
 
 ## Live app
 
 [Open the live Global Labor Analysis app](https://global-labor-analysis.streamlit.app/)
+
+## About the app
+
+The app shows country level unemployment rates on a world map. Use the year slider to compare reported unemployment across countries over time. The map uses a fixed color scale so the visual meaning of color stays consistent from year to year.
+
+The current interface keeps unemployment as the only exposed measure. A future structural labor phase may use the sector share fields in the source data.
 
 ## Run locally
 
@@ -18,3 +20,5 @@ streamlit run app.py
 ```
 
 The app is ready for Streamlit Community Cloud deployment from the repository root. The CSV must remain beside `app.py`.
+
+Version note: the current release uses the dark editorial visual direction documented in `AGENTS.md`.
