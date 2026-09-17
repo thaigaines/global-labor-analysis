@@ -7,6 +7,7 @@
 - Preserve one Streamlit page with one interactive world map and one year slider.
 - Load `Employment_Unemployment_GDP_data.csv` locally from the project.
 - Keep **unemployment rate (%)** as the only exposed measure. Preserve the data seam for a separately approved structural-labor phase, but do not expose sector measures yet. Do not make raw GDP the default because its scale is dominated by country size.
+- The map uses a fixed 0–20% visual color range. Values above 20% use the endpoint color, while tooltips retain the raw rate.
 
 ## v2 visual direction
 
@@ -24,6 +25,8 @@ Forecasting, authentication, databases, extra pages, user accounts, rankings, ex
 - Keep the data model at country × year. Do not imply causality, rankings, or forecasts.
 - Surface the dataset's limitations briefly: GDP is nominal USD, country coverage may vary by year, and sector percentages are shares rather than employment counts.
 - Treat v1 as an unemployment exploration tool with a deliberate seam for a later structural-labor phase; avoid premature sector comparisons, composite indices, or causal interpretation.
+- Begin preparing for structural analysis by preserving agriculture, industry, and services fields during data loading, while keeping them out of the v2 interface until a separate design decision.
+- Keep `prepare_map_data` and `build_unemployment_map` as the small test seams for visual encoding and future measure expansion.
 
 ## Completion criteria
 
