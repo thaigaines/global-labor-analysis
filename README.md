@@ -1,6 +1,6 @@
 # Global Labor Analysis
 
-A minimal Streamlit map for exploring unemployment rates across countries from 1991 to 2022.
+A focused Streamlit map for exploring unemployment rates and employment-sector context across countries from 1991 to 2022.
 
 ## Live app
 
@@ -8,15 +8,21 @@ A minimal Streamlit map for exploring unemployment rates across countries from 1
 
 ## About the app
 
-The app shows country level unemployment rates on a world map. Use the year slider to compare reported unemployment across countries over time. The map uses a fixed color scale so the visual meaning of color stays consistent from year to year.
+The app shows country-level unemployment rates on a world map. Use the year slider to compare reported unemployment across countries over time. Country tooltips also retain the source dataset's agriculture, industry, and services shares. The map uses a fixed color scale so the visual meaning of color stays consistent from year to year.
 
-The current interface keeps unemployment as the only exposed measure. A future structural labor phase may use the sector share fields in the source data.
+Unemployment remains the map's only visual measure; sector shares provide descriptive context in tooltips and are not used to rank countries or imply causality. GDP is nominal USD, and sector values are shares rather than employment counts.
 
 ## Run locally
 
 ```powershell
 python -m pip install -r requirements.txt
 streamlit run app.py
+```
+
+Run the repository smoke check with the project environment:
+
+```powershell
+python smoke_check.py
 ```
 
 The app is ready for Streamlit Community Cloud deployment from the repository root. The CSV must remain beside `app.py`.

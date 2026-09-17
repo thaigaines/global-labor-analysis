@@ -1,32 +1,39 @@
 # Global Labor Analysis
 
-## v2 scope
+## v3 scope
 
 - Deploy on Streamlit Community Cloud.
 - Use Python with the smallest practical dependency set: `streamlit`, `pandas`, and `plotly`; add `pycountry` only if country-to-map matching requires it.
 - Preserve one Streamlit page with one interactive world map and one year slider.
 - Load `Employment_Unemployment_GDP_data.csv` locally from the project.
-- Keep **unemployment rate (%)** as the only exposed measure. Preserve the data seam for a separately approved structural-labor phase, but do not expose sector measures yet. Do not make raw GDP the default because its scale is dominated by country size.
+- Keep **unemployment rate (%)** as the map's visual measure. Preserve the three source employment-sector fields: agriculture, industry, and services. Surface those shares only as descriptive country tooltip context; do not create rankings, composite indices, or causal interpretations. Do not make raw GDP the default because its scale is dominated by country size.
 - The map uses a fixed 0–20% visual color range. Values above 20% use the endpoint color, while tooltips retain the raw rate.
 
-## v2 visual direction
+## v3 visual direction
 
-- Use a dark editorial system inspired by the portfolio reference: dark navy canvas, aqua accent, spacious composition, strong typographic hierarchy, thin visual separation, and restrained metadata.
+- Use a quiet material/editorial system inspired by Google's clean visual discipline: dark navy canvas, aqua accent, spacious composition, strong typographic hierarchy, thin visual separation, restrained native metric cards, and clear interaction states. This is inspiration for clarity and rhythm, not literal Google branding.
 - Keep the map as the visual anchor. Use subdued geography, a high-contrast continuous legend, and clear country tooltips.
+- Keep the year slider as the only user control. Use small native metrics for selected year, country coverage, and the presence of the three sector fields.
 - Styling is presentation only; do not imply causality, forecasts, or rankings.
 
 ## Explicitly out of scope
 
-Forecasting, authentication, databases, extra pages, user accounts, rankings, extra measures, elaborate prose, custom backend services, and speculative derived metrics are not part of v2.
+Forecasting, authentication, databases, extra pages, user accounts, rankings, composite indices, elaborate prose, custom backend services, and speculative derived metrics are not part of v3.
 
 ## Design decisions to preserve
 
-- Favor a working, legible map over dashboard breadth or visual polish.
+- Favor a working, legible map over dashboard breadth; visual polish should improve orientation and comprehension rather than add noise.
 - Keep the data model at country × year. Do not imply causality, rankings, or forecasts.
 - Surface the dataset's limitations briefly: GDP is nominal USD, country coverage may vary by year, and sector percentages are shares rather than employment counts.
-- Treat v1 as an unemployment exploration tool with a deliberate seam for a later structural-labor phase; avoid premature sector comparisons, composite indices, or causal interpretation.
-- Begin preparing for structural analysis by preserving agriculture, industry, and services fields during data loading, while keeping them out of the v2 interface until a separate design decision.
+- Treat the app as an unemployment exploration tool with a deliberate structural-labor seam; preserve agriculture, industry, and services fields during data loading and show them only as source context in tooltips.
 - Keep `prepare_map_data` and `build_unemployment_map` as the small test seams for visual encoding and future measure expansion.
+
+## Team alignment and review protocol
+
+- Creative direction, architecture, technical lead, and manager roles must communicate concrete decisions, risks, and acceptance checks.
+- Before implementation, each role must challenge the others' assumptions using the available grilling workflow until the team is aligned. The exact referenced `grill-me` skill is not installed in this environment, so use the available `grilling` skill as the fallback.
+- The architect must inspect the actual codebase and git diff at four checkpoints: before implementation, after AGENTS.md changes, after app refactor/UI changes, and immediately before manager audit. Each checkpoint must call out scope drift, shallow seams, unnecessary dependencies, and regressions.
+- The technical lead coordinates implementation and verification. The manager audits the final working tree against this file and the user request; only an explicit manager approval permits push or deployment.
 
 ## Completion criteria
 
@@ -35,4 +42,5 @@ Forecasting, authentication, databases, extra pages, user accounts, rankings, ex
 - The year slider spans 1991–2022 and changes the map data.
 - The map renders country-level values with a legend, tooltip, and an understandable no-data treatment.
 - At least one smoke check confirms the app imports/starts, the first and last years load, and a known country has a numeric value.
+- Keep the smoke check reproducible in `smoke_check.py`; malformed or unusable CSVs must fail with a concise user-facing error rather than an uncaught min/max failure.
 - No forecasting, authentication, database, extra page, or unnecessary dependency is introduced.
