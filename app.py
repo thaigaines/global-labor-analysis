@@ -103,7 +103,15 @@ except (FileNotFoundError, ValueError) as error:
 
 min_year = int(data[YEAR_COLUMN].min())
 max_year = int(data[YEAR_COLUMN].max())
-selected_year = st.slider("Year", min_year, max_year, max_year)
+with st.container(horizontal=True, vertical_alignment="center", gap="small", border=True):
+    st.markdown("**Year**", width="content")
+    selected_year = st.slider(
+        "Year",
+        min_year,
+        max_year,
+        max_year,
+        label_visibility="collapsed",
+    )
 
 year_data = data[data[YEAR_COLUMN] == selected_year]
 coverage = year_data[MEASURE_COLUMN].notna().sum()
@@ -115,7 +123,8 @@ with st.container(border=True):
     st.plotly_chart(fig, width="stretch")
 
 st.caption(
-    "Source: Employment_Unemployment_GDP_data.csv. Values are descriptive unemployment rates; "
+    "Source: [Employment_Unemployment_GDP_data.csv](https://www.kaggle.com/datasets/akshatsharma2/global-jobs-gdp-and-unemployment-data-19912022). "
+    "Values are descriptive unemployment rates; "
     "country coverage varies by year; neutral gray indicates no reported data, and values above 20% "
     "use the endpoint color while tooltips retain the raw rate."
 )
