@@ -1,4 +1,5 @@
 from pathlib import Path
+from math import log1p
 
 import pandas as pd
 import plotly.express as px
@@ -9,6 +10,7 @@ DATA_PATH = Path(__file__).with_name("Employment_Unemployment_GDP_data.csv")
 YEAR_COLUMN = "Year"
 COUNTRY_COLUMN = "Country Name"
 MEASURE_COLUMN = "Unemployment Rate"
+COLOR_COLUMN = "Unemployment Color"
 REQUIRED_COLUMNS = [COUNTRY_COLUMN, YEAR_COLUMN, MEASURE_COLUMN]
 
 
@@ -47,23 +49,32 @@ year_data = data[data[YEAR_COLUMN] == selected_year]
 coverage = year_data[MEASURE_COLUMN].notna().sum()
 st.caption(f"YEAR {selected_year}  /  {coverage} COUNTRIES WITH REPORTED DATA")
 
+map_data = year_data.assign(**{COLOR_COLUMN: year_data[MEASURE_COLUMN].map(log1p)})
+color_ticks = [0, 5, 10, 15, 20, 25, 30, 35]
+
 fig = px.choropleth(
-    year_data,
+    map_data,
     locations=COUNTRY_COLUMN,
     locationmode="country names",
-    color=MEASURE_COLUMN,
+    color=COLOR_COLUMN,
     hover_name=COUNTRY_COLUMN,
-    hover_data={MEASURE_COLUMN: ":.2f"},
+    hover_data={MEASURE_COLUMN: ":.2f", COLOR_COLUMN: False},
     color_continuous_scale=["#17324d", "#45b7aa", "#f0d264", "#f08a5d"],
-    range_color=(float(data[MEASURE_COLUMN].min()), float(data[MEASURE_COLUMN].max())),
-    labels={MEASURE_COLUMN: "Unemployment (%)"},
+    range_color=(log1p(float(data[MEASURE_COLUMN].min())), log1p(float(data[MEASURE_COLUMN].max()))),
+    labels={MEASURE_COLUMN: "Unemployment (%)", COLOR_COLUMN: "Unemployment (%)"},
 )
 fig.update_layout(
     template="plotly_dark",
     paper_bgcolor="#07111f",
     plot_bgcolor="#07111f",
     margin={"r": 0, "t": 10, "l": 0, "b": 0},
-    coloraxis_colorbar_title="Unemployment (%)",
+)
+fig.update_coloraxes(
+    colorbar={
+        "title": "Unemployment (%)",
+        "tickvals": [log1p(value) for value in color_ticks],
+        "ticktext": [str(value) for value in color_ticks],
+    }
 )
 fig.update_geos(
     showframe=False,
