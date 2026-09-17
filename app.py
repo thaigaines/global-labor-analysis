@@ -74,7 +74,8 @@ fig.update_geos(
     showland=True,
     landcolor="#142538",
 )
-st.plotly_chart(fig, width="stretch")
+with st.container(border=True):
+    st.plotly_chart(fig, width="stretch")
 
 st.caption(
     "Source: Employment_Unemployment_GDP_data.csv. Values are descriptive unemployment rates; "
