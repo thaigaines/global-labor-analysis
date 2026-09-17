@@ -30,8 +30,8 @@ def load_data(path: Path) -> pd.DataFrame:
 
 
 st.set_page_config(page_title="Global Unemployment", page_icon=":material/public:", layout="wide")
-st.title("Global unemployment", icon=":material/public:")
-st.caption("Explore how unemployment rates vary across countries over time.")
+st.title("GLOBAL / UNEMPLOYMENT", icon=":material/public:")
+st.caption("A country-level view of unemployment from 1991 to 2022.")
 
 try:
     data = load_data(DATA_PATH)
@@ -45,7 +45,7 @@ selected_year = st.slider("Year", min_year, max_year, max_year)
 
 year_data = data[data[YEAR_COLUMN] == selected_year]
 coverage = year_data[MEASURE_COLUMN].notna().sum()
-st.write(f"Showing {selected_year} — {coverage} countries with reported unemployment data")
+st.caption(f"YEAR {selected_year}  /  {coverage} COUNTRIES WITH REPORTED DATA")
 
 fig = px.choropleth(
     year_data,
@@ -54,11 +54,14 @@ fig = px.choropleth(
     color=MEASURE_COLUMN,
     hover_name=COUNTRY_COLUMN,
     hover_data={MEASURE_COLUMN: ":.2f"},
-    color_continuous_scale="YlOrRd",
+    color_continuous_scale=["#17324d", "#45b7aa", "#f0d264", "#f08a5d"],
     range_color=(float(data[MEASURE_COLUMN].min()), float(data[MEASURE_COLUMN].max())),
     labels={MEASURE_COLUMN: "Unemployment (%)"},
 )
 fig.update_layout(
+    template="plotly_dark",
+    paper_bgcolor="#07111f",
+    plot_bgcolor="#07111f",
     margin={"r": 0, "t": 10, "l": 0, "b": 0},
     coloraxis_colorbar_title="Unemployment (%)",
 )
@@ -67,9 +70,9 @@ fig.update_geos(
     showcoastlines=True,
     showcountries=True,
     showocean=True,
-    oceancolor="#eaf2f8",
+    oceancolor="#07111f",
     showland=True,
-    landcolor="#f3f4f6",
+    landcolor="#142538",
 )
 st.plotly_chart(fig, width="stretch")
 

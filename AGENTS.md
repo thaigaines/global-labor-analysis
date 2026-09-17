@@ -1,16 +1,22 @@
 # Global Labor Analysis
 
-## v1 scope
+## v2 scope
 
 - Deploy on Streamlit Community Cloud.
 - Use Python with the smallest practical dependency set: `streamlit`, `pandas`, and `plotly`; add `pycountry` only if country-to-map matching requires it.
-- Build one Streamlit page with one interactive world map and one year slider.
+- Preserve one Streamlit page with one interactive world map and one year slider.
 - Load `Employment_Unemployment_GDP_data.csv` locally from the project.
-- Map one country/year measure at a time. The v1 default and primary focus is **unemployment rate (%)**. Keep the data loading and UI structure extensible for a future pivot toward structural analysis using sector shares, but do not build that pivot into v1. Do not make raw GDP the default because its scale is dominated by country size; if exposed later, label it clearly as nominal USD.
+- Keep **unemployment rate (%)** as the only exposed measure. Preserve the data seam for a separately approved structural-labor phase, but do not expose sector measures yet. Do not make raw GDP the default because its scale is dominated by country size.
+
+## v2 visual direction
+
+- Use a dark editorial system inspired by the portfolio reference: dark navy canvas, aqua accent, spacious composition, strong typographic hierarchy, thin visual separation, and restrained metadata.
+- Keep the map as the visual anchor. Use subdued geography, a high-contrast continuous legend, and clear country tooltips.
+- Styling is presentation only; do not imply causality, forecasts, or rankings.
 
 ## Explicitly out of scope
 
-Forecasting, authentication, databases, extra pages, user accounts, elaborate prose, custom backend services, and speculative derived metrics are not part of v1.
+Forecasting, authentication, databases, extra pages, user accounts, rankings, extra measures, elaborate prose, custom backend services, and speculative derived metrics are not part of v2.
 
 ## Design decisions to preserve
 
