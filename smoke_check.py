@@ -8,6 +8,14 @@ def main() -> None:
     assert data[app.YEAR_COLUMN].min() == app.PRODUCT_MIN_YEAR
     assert data[app.YEAR_COLUMN].max() == app.PRODUCT_MAX_YEAR
     assert all(column in data.columns for column in app.SECTOR_COLUMNS)
+    trend = app.prepare_sector_trend(data, "United States")
+    assert trend[app.YEAR_COLUMN].min() == app.PRODUCT_MIN_YEAR
+    assert trend[app.YEAR_COLUMN].max() == app.PRODUCT_MAX_YEAR
+    assert list(trend.columns) == [app.YEAR_COLUMN, "Agriculture", "Industry", "Services"]
+    assert len(app.build_sector_trend(trend).data) == 3
+    sparse_trend = app.prepare_sector_trend(data, "Afghanistan")
+    assert len(sparse_trend) == app.PRODUCT_MAX_YEAR - app.PRODUCT_MIN_YEAR + 1
+    assert sparse_trend["Agriculture"].isna().any()
 
     us_2022 = data[
         data[app.COUNTRY_COLUMN].eq("United States")
@@ -25,7 +33,7 @@ def main() -> None:
     app_test.slider[0].set_value(app.PRODUCT_MAX_YEAR).run()
     assert not app_test.exception
 
-    print("Smoke check passed: app startup, year endpoints, sector fields, and U.S. value.")
+    print("Smoke check passed: app startup, year endpoints, sector trend, sector fields, and U.S. value.")
 
 
 if __name__ == "__main__":

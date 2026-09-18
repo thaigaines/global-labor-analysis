@@ -8,9 +8,9 @@ A focused Streamlit map for exploring unemployment rates and employment-sector c
 
 ## About the app
 
-The app shows country-level unemployment rates on a world map. Use the year slider to compare reported unemployment across countries over time. Country tooltips also retain the source dataset's agriculture, industry, and services shares. The map uses a fixed color scale so the visual meaning of color stays consistent from year to year.
+The app pairs country-level unemployment on a world map with a selected-country history of agriculture, industry, and services shares. Use the year slider to compare reported unemployment across countries over time, and use the country selector to inspect sector shifts from 1991 to 2022. The map uses a fixed color scale so the visual meaning of color stays consistent from year to year.
 
-Unemployment remains the map's only visual measure; sector shares provide descriptive context in tooltips and are not used to rank countries or imply causality. GDP is nominal USD, and sector values are shares rather than employment counts.
+Unemployment remains the map's only color measure; sector shares are shown as descriptive country history and are not used to rank countries or imply causality. GDP is nominal USD, and sector values are shares rather than employment counts.
 
 ## Run locally
 
