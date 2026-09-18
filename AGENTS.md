@@ -2,32 +2,41 @@
 
 ## Mission
 
-- Build a portfolio-quality global labor-structure explorer from `Employment_Unemployment_GDP_data.csv`.
-- Make unemployment the geographic anchor and agriculture, industry, and services the temporal story.
-- Explain change over time clearly, without implying causality, forecasts, rankings, or employment counts.
+- Build a polished global labor-structure explorer from `Employment_Unemployment_GDP_data.csv`.
+- Help people form their own conclusions from unemployment, sector structure, and economic context.
+- Tell a clear descriptive story over time while preserving seams for future datasets.
+
+## Product direction
+
+- Keep unemployment as the geographic anchor and agriculture, industry, and services as the labor-structure story.
+- Use GDP as contextual evidence alongside the labor measures, not as a competing map or headline score.
+- Prefer global and country-to-country patterns when the data supports them. Do not force a single-country narrative.
+- Explain relationships cautiously with explicit association, not causation, language. The interface should expose evidence, not dictate a conclusion.
+- Allow only transparent calculations with visible definitions, such as changes over time or clearly labeled percentage differences. Never create a composite score.
+- Optimize this dataset for educational clarity and portfolio quality first. Preserve clean data and chart seams for later datasets.
 
 ## Product contract
 
-- Keep one Streamlit page with this visual order: global snapshot map, year slider below the map, country selector, sector bar chart.
-- The slider controls both the map year and the selected-country sector snapshot. Keep the exact 1991–2022 range.
-- Keep the globe recognizable and primary. Use bold type, asymmetry, vivid sector colors, and strong section rhythm while keeping values legible.
-- Show honest no-data states. Sector values are percentages or shares, GDP is nominal USD, and country coverage varies by year.
-- Keep the Kaggle source link and the small project credit visible in the page metadata or footer.
+- Keep one Streamlit page with the globe as the primary attention anchor, followed by the year control, country context, and sector story.
+- Keep the exact 1991–2022 range, honest missing-value states, and readable tooltips.
+- Treat sector fields as shares, GDP as nominal USD, and country coverage as variable by year.
+- Keep the Kaggle source link and small project credit visible in page metadata or the footer.
 
 ## Engineering guardrails
 
-- Preserve the country × year data model and local CSV seam. Keep dependencies to `streamlit`, `pandas`, and `plotly` unless a documented decision adds one.
+- Preserve the country × year model and local CSV seam. Keep dependencies to `streamlit`, `pandas`, and `plotly` unless a documented decision adds one.
 - Keep `load_data`, `prepare_map_data`, `build_unemployment_map`, `prepare_sector_snapshot`, and `build_sector_snapshot` small and testable.
-- Prefer native Streamlit and Plotly. Add concise comments only where they explain a non-obvious stakeholder-facing decision; do not narrate obvious code.
-- Refactor redundant code when touching a file, but keep changes local and behavior-focused.
+- Prefer native Streamlit and Plotly. Add concise comments only for non-obvious stakeholder-facing decisions.
+- Refactor redundant code when touching a file, keeping changes local, minimal, and behavior-focused.
 
 ## Team workflow
 
-- Creative direction owns visual hierarchy and attention. The architect owns simplicity, comments, and refactoring. The technical lead verifies behavior and runtime evidence. The manager audits the final diff.
-- After each meaningful adjustment, have the architect re-check the affected code and have the relevant domain lead audit it. Use grilling when a product decision is ambiguous and record the decision, not the debate.
-- Run `python smoke_check.py`, `python -m py_compile app.py`, and `git diff --check` before handoff. A manager approval is required before any push or deployment.
+- Creative direction owns visual hierarchy and attention. Architecture owns simple seams and refactoring. Technical leadership owns data quality and runtime evidence. Management owns scope and final approval.
+- For a new product decision, grill the assumptions, have the roles challenge one another, record the resolved direction here, and prepare the team for implementation.
+- After each meaningful adjustment, recheck the affected code and have the relevant domain lead audit it.
+- Run `python smoke_check.py`, `python -m py_compile app.py`, and `git diff --check` before handoff. Manager approval is required before any push or deployment.
 
 ## Completion
 
-- The app starts from the repository root, reaches both slider endpoints, updates the map and sector chart together, and preserves honest missing values.
-- The final working tree is minimal, commented where useful, visually intentional, and manager-approved with runtime evidence.
+- The app starts from the repository root, the year interaction updates every dependent view, derived values are reproducible from visible definitions, and missing data remains explicit.
+- The final tree is minimal, readable, visually intentional, and manager-approved with runtime evidence.
