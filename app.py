@@ -122,52 +122,71 @@ def build_unemployment_map(map_data: pd.DataFrame, cap: float = MAP_CAP):
     return fig
 
 
-def prepare_sector_trend(data: pd.DataFrame, country: str) -> pd.DataFrame:
-    """Return one country's sector shares across the full product range, preserving gaps."""
-    trend = data[data[COUNTRY_COLUMN].eq(country)][[YEAR_COLUMN, *SECTOR_COLUMNS]].copy()
-    trend = trend.set_index(YEAR_COLUMN).reindex(
-        range(PRODUCT_MIN_YEAR, PRODUCT_MAX_YEAR + 1)
+def prepare_sector_snapshot(data: pd.DataFrame, country: str, year: int) -> pd.DataFrame:
+    """Return one country's sector shares for the selected year in chart-ready form."""
+    row = data[
+        data[COUNTRY_COLUMN].eq(country) & data[YEAR_COLUMN].eq(year)
+    ]
+    values = row.iloc[0] if not row.empty else pd.Series(dtype="float64")
+    return pd.DataFrame(
+        {
+            "Sector": list(SECTOR_LABELS.values()),
+            "Share": [values.get(column, float("nan")) for column in SECTOR_COLUMNS],
+        }
     )
-    trend.index.name = YEAR_COLUMN
-    return trend.rename(columns=SECTOR_LABELS).reset_index()
 
 
-def build_sector_trend(trend_data: pd.DataFrame):
-    """Build a readable, comparable sector-share history without interpolating gaps."""
-    fig = px.line(
-        trend_data,
-        x=YEAR_COLUMN,
-        y=list(SECTOR_LABELS.values()),
-        markers=True,
+def build_sector_snapshot(snapshot_data: pd.DataFrame, year: int):
+    """Build a vivid, comparable sector-share snapshot for one country-year."""
+    plot_data = snapshot_data.dropna(subset=["Share"])
+    missing_sectors = snapshot_data.loc[
+        snapshot_data["Share"].isna(), "Sector"
+    ].tolist()
+    fig = px.bar(
+        plot_data,
+        x="Sector",
+        y="Share",
+        color="Sector",
+        text="Share",
         color_discrete_map={
             "Agriculture": "#f0b45b",
             "Industry": "#8fa9c9",
             "Services": "#73e6d1",
         },
-        labels={YEAR_COLUMN: "Year", "value": "Share (%)", "variable": "Sector"},
+        category_orders={"Sector": list(SECTOR_LABELS.values())},
+        labels={"Share": "Employment share (%)"},
     )
-    for trace, dash in zip(fig.data, ["dash", "dot", "solid"]):
-        trace.update(
-            connectgaps=False,
-            line={"width": 3, "dash": dash},
-            hovertemplate="%{x}<br>%{fullData.name}: %{y:.1f}%<extra></extra>",
-        )
+    fig.update_traces(
+        texttemplate="%{text:.1f}%",
+        textposition="outside",
+        hovertemplate=f"{year}<br>%{{x}}: %{{y:.1f}}%<extra></extra>",
+    )
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="#07111f",
         plot_bgcolor="#07111f",
         margin={"r": 20, "t": 20, "l": 10, "b": 10},
-        legend={"orientation": "h", "y": 1.08, "x": 0},
-        hovermode="x unified",
+        showlegend=False,
     )
     fig.update_yaxes(range=[0, 100], ticksuffix="%", gridcolor="#26384b")
-    fig.update_xaxes(range=[PRODUCT_MIN_YEAR, PRODUCT_MAX_YEAR], dtick=5, gridcolor="#17283a")
+    fig.update_xaxes(showgrid=False)
+    if missing_sectors:
+        fig.add_annotation(
+            text=f"No data: {', '.join(missing_sectors)}",
+            xref="paper",
+            yref="paper",
+            x=0,
+            y=1.08,
+            showarrow=False,
+            font={"color": "#a9b7c6", "size": 12},
+            align="left",
+        )
     return fig
 
 
-st.set_page_config(page_title="Global Unemployment", page_icon=":material/public:", layout="wide")
+st.set_page_config(page_title="Global Labor Explorer", page_icon=":material/public:", layout="wide")
 st.title("GLOBAL / LABOR", icon=":material/public:")
-st.caption("A clear view of unemployment and employment structure across countries, 1991–2022.")
+st.caption("A world in transition, told through unemployment and the changing shape of work.")
 
 try:
     data = load_data(DATA_PATH)
@@ -190,45 +209,26 @@ with st.container(horizontal=True, vertical_alignment="center", gap="small", bor
 year_data = data[data[YEAR_COLUMN] == selected_year]
 coverage = year_data[MEASURE_COLUMN].notna().sum()
 countries = sorted(data[COUNTRY_COLUMN].dropna().unique())
-selected_country = st.selectbox(
-    "Country for sector history",
-    countries,
-    index=countries.index("United States") if "United States" in countries else 0,
-)
-with st.container(horizontal=True, gap="small"):
-    st.metric("Selected year", selected_year)
-    st.metric("Reported countries", coverage)
-    st.metric("Employment sectors", len(SECTOR_COLUMNS))
-
-st.caption(f"YEAR {selected_year}  /  {coverage} COUNTRIES WITH REPORTED DATA")
-
-sector_trend = prepare_sector_trend(data, selected_country)
-st.subheader(f"Sector shifts · {selected_country}")
-st.caption(
-    "Employment shares across agriculture, industry, and services. Values are reported for "
-    "this country by year; gaps are not interpolated."
-)
-with st.container(border=True):
-    st.plotly_chart(build_sector_trend(sector_trend), width="stretch")
-with st.expander("View sector values", icon=":material/table_chart:"):
-    st.dataframe(
-        sector_trend,
-        hide_index=True,
-        width="stretch",
-        column_config={
-            YEAR_COLUMN: st.column_config.NumberColumn("Year", format="%d"),
-            **{
-                label: st.column_config.NumberColumn(label, format="%.1f%%")
-                for label in SECTOR_LABELS.values()
-            },
-        },
-    )
 
 map_data = prepare_map_data(year_data)
 fig = build_unemployment_map(map_data)
 with st.container(border=True):
-    st.subheader("Unemployment by country")
+    st.markdown("**01 / GLOBAL SNAPSHOT**")
+    st.subheader(f"Unemployment across the world · {selected_year}")
     st.plotly_chart(fig, width="stretch")
+
+st.caption(f"{selected_year} · {coverage} countries with reported unemployment")
+selected_country = st.selectbox(
+    "Country for sector snapshot",
+    countries,
+    index=countries.index("United States") if "United States" in countries else 0,
+)
+sector_snapshot = prepare_sector_snapshot(data, selected_country, selected_year)
+with st.container(border=True):
+    st.markdown("**02 / THE SHAPE OF WORK**")
+    st.subheader(f"Sector composition · {selected_country} · {selected_year}")
+    st.caption("Employment shares for the selected country and year. Move the year slider to watch the mix shift.")
+    st.plotly_chart(build_sector_snapshot(sector_snapshot, selected_year), width="stretch")
 
 st.caption(
     f"Source: [Employment_Unemployment_GDP_data.csv]({SOURCE_URL}). "
@@ -237,3 +237,4 @@ st.caption(
     "GDP is nominal USD; neutral gray indicates no reported data, and values above 20% use the "
     "endpoint color while tooltips retain the raw rate."
 )
+st.caption("Project by Thai Gaines.")

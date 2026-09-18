@@ -1,48 +1,31 @@
 # Global Labor Analysis
 
-## v4 scope
+## Product
 
-- Deploy on Streamlit Community Cloud.
-- Use Python with the smallest practical dependency set: `streamlit`, `pandas`, and `plotly`; add `pycountry` only if country-to-map matching requires it.
-- Preserve one Streamlit page with one interactive world map and one year slider.
-- Load `Employment_Unemployment_GDP_data.csv` locally from the project.
-- Keep **unemployment rate (%)** as the map's visual measure. Make the three source employment-sector fields—agriculture, industry, and services—a first-class descriptive view through a selected-country history. Do not create rankings, composite indices, or causal interpretations. Do not make raw GDP the default because its scale is dominated by country size.
-- The map uses a fixed 0–20% visual color range. Values above 20% use the endpoint color, while tooltips retain the raw rate.
+- Build a clear, portfolio-quality global labor-structure explorer from `Employment_Unemployment_GDP_data.csv`.
+- Tell a truthful story over time: the year slider controls the unemployment map and the selected-country sector snapshot.
+- Preserve one Streamlit page in this order: year slider, dominant world map, country selector, sector bar chart.
+- Unemployment is the map's color measure. Agriculture, industry, and services are the approved sector measures and are employment shares, not employment counts.
+- The sector bar chart shows the selected country's values for the selected year. Keep the fixed 1991–2022 range, exact values, and visible no-data states.
+- Treat the map as the primary attention anchor. Use bold typography, asymmetric spacing, vivid sector colors, and clear section rhythm to create visual impact without obscuring data.
 
-## v4 visual direction
+## Truth and scope
 
-- Use a quiet material/editorial system inspired by Google's clean visual discipline: dark navy canvas, aqua accent, spacious composition, strong typographic hierarchy, thin visual separation, restrained native metric cards, and clear interaction states. This is inspiration for clarity and rhythm, not literal Google branding.
-- Keep the map as the visual anchor. Use subdued geography, a high-contrast continuous legend, and clear country tooltips.
-- Keep the map visually dominant while adding a bold sector-history panel above it. Use a selected-country control, high-contrast sector colors, distinct line styles, direct hover values, and a same-measure table fallback so the page is engaging without becoming noisy.
-- Styling is presentation only; do not imply causality, forecasts, or rankings.
+- Preserve the country × year data model and the local CSV seam.
+- Keep the map color range fixed at 0–20%; retain raw unemployment values in tooltips.
+- GDP is nominal USD. Country coverage varies by year. Sector values are shares.
+- Use descriptive language only. Do not rank countries, infer causality, forecast, normalize, or weight sector values without an explicit product decision and supporting data.
+- Keep dependencies to `streamlit`, `pandas`, and `plotly` unless a written decision justifies another one.
 
-## Explicitly out of scope
+## Code and review
 
-Forecasting, authentication, databases, extra pages, user accounts, rankings, composite indices, elaborate prose, custom backend services, and speculative derived metrics are not part of v4.
+- Keep `load_data`, `prepare_map_data`, `build_unemployment_map`, `prepare_sector_snapshot`, and `build_sector_snapshot` small, focused test seams.
+- Prefer native Streamlit elements and Plotly. Keep the implementation local and readable; refactor only when it improves locality or testability.
+- Creative direction owns visual hierarchy and attention. The technical lead coordinates behavior and verification. The architect checks each meaningful change for simplicity and scope. The manager audits the final diff and runtime evidence.
+- Use the grilling workflow for team alignment when a product decision is ambiguous. Record the resulting decision here, not a debate transcript.
 
-## Design decisions to preserve
+## Done means
 
-- Favor a working, legible map over dashboard breadth; visual polish should improve orientation and comprehension rather than add noise.
-- Keep the data model at country × year. Do not imply causality, rankings, or forecasts.
-- Surface the dataset's limitations briefly: GDP is nominal USD, country coverage may vary by year, and sector percentages are shares rather than employment counts.
-- Treat the app as a paired unemployment and structural-labor exploration tool. The map is colored only by unemployment; the sector panel shows one selected country's agriculture, industry, and services shares over 1991–2022.
-- Sector values are shares, not employment counts. Do not label them as global employment structure, normalize them, weight them by GDP or population, interpolate missing years, or infer causality.
-- Keep `prepare_map_data`, `build_unemployment_map`, `prepare_sector_trend`, and `build_sector_trend` as small test seams for visual encoding and future measure expansion.
-
-## Team alignment and review protocol
-
-- Creative direction, architecture, technical lead, and manager roles must communicate concrete decisions, risks, and acceptance checks.
-- Before implementation, each role must challenge the others' assumptions using the available grilling workflow until the team is aligned. The exact referenced `grill-me` skill is not installed in this environment, so use the available `grilling` skill as the fallback.
-- The architect must inspect the actual codebase and git diff at four checkpoints: before implementation, after AGENTS.md changes, after app refactor/UI changes, and immediately before manager audit. Each checkpoint must call out scope drift, shallow seams, unnecessary dependencies, and regressions.
-- The technical lead coordinates implementation and verification. The manager audits the final working tree against this file and the user request; only an explicit manager approval permits push or deployment.
-
-## Completion criteria
-
-- A fresh Streamlit Community Cloud deployment starts from the repository root with a documented run command.
-- The CSV loads without manual preprocessing, and the app handles an invalid/missing file with a concise user-facing error.
-- The year slider spans 1991–2022 and changes the map data; the country selector changes the sector history.
-- The sector history renders agriculture, industry, and services across 1991–2022 with a fixed 0–100% axis and no interpolated gaps.
-- The map renders country-level values with a legend, tooltip, and an understandable no-data treatment.
-- At least one smoke check confirms the app imports/starts, the first and last years load, and a known country has a numeric value.
-- Keep the smoke check reproducible in `smoke_check.py`; malformed or unusable CSVs must fail with a concise user-facing error rather than an uncaught min/max failure.
-- No forecasting, authentication, database, extra page, or unnecessary dependency is introduced.
+- `python smoke_check.py` passes in the project environment.
+- The app starts from the repository root, the slider reaches 1991 and 2022, the map updates, the selector changes the bar chart, and missing values remain honest.
+- A final manager audit approves the working tree before any push or deployment.
