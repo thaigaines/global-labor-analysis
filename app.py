@@ -189,7 +189,7 @@ def build_sector_snapshot(snapshot_data: pd.DataFrame, year: int):
 
 st.set_page_config(page_title="Global Labor Explorer", page_icon=":material/public:", layout="wide")
 st.title("GLOBAL / LABOR", icon=":material/public:")
-st.subheader("One globe and one changing shape of work.")
+st.subheader("Global unemployment and compositionof sectors.")
 st.caption("A country-level view of unemployment and employment structure from 1991 to 2022.")
 
 try:
