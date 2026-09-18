@@ -53,6 +53,7 @@ def load_data(path: Path) -> pd.DataFrame:
 
 def prepare_map_data(year_data: pd.DataFrame, cap: float = MAP_CAP) -> pd.DataFrame:
     """Keep raw rates and readable display values while capping only map colors."""
+    # Preserve the source rate for tooltips; cap only the value that drives map color.
     map_data = year_data.assign(**{COLOR_COLUMN: year_data[MEASURE_COLUMN].clip(upper=cap)})
     map_data[MEASURE_DISPLAY_COLUMN] = map_data[MEASURE_COLUMN].map(
         lambda value: f"{value:.2f}%" if pd.notna(value) else "No data"
@@ -92,6 +93,7 @@ def build_unemployment_map(map_data: pd.DataFrame, cap: float = MAP_CAP):
         template="plotly_dark",
         paper_bgcolor="#07111f",
         plot_bgcolor="#07111f",
+        height=560,
         margin={"r": 0, "t": 10, "l": 0, "b": 0},
     )
     fig.update_coloraxes(
@@ -124,6 +126,7 @@ def build_unemployment_map(map_data: pd.DataFrame, cap: float = MAP_CAP):
 
 def prepare_sector_snapshot(data: pd.DataFrame, country: str, year: int) -> pd.DataFrame:
     """Return one country's sector shares for the selected year in chart-ready form."""
+    # Keep a fixed three-row shape so sector order and missing-state handling stay stable.
     row = data[
         data[COUNTRY_COLUMN].eq(country) & data[YEAR_COLUMN].eq(year)
     ]
@@ -186,7 +189,8 @@ def build_sector_snapshot(snapshot_data: pd.DataFrame, year: int):
 
 st.set_page_config(page_title="Global Labor Explorer", page_icon=":material/public:", layout="wide")
 st.title("GLOBAL / LABOR", icon=":material/public:")
-st.caption("A world in transition, told through unemployment and the changing shape of work.")
+st.subheader("One globe. A changing shape of work.")
+st.caption("A country-level view of unemployment and employment structure from 1991 to 2022.")
 
 try:
     data = load_data(DATA_PATH)
@@ -194,38 +198,55 @@ except (FileNotFoundError, ValueError) as error:
     st.error(str(error))
     st.stop()
 
-min_year = PRODUCT_MIN_YEAR
-max_year = PRODUCT_MAX_YEAR
-with st.container(horizontal=True, vertical_alignment="center", gap="small", border=True):
-    st.markdown("**Year**", width="content")
-    selected_year = st.slider(
-        "Year",
-        min_year,
-        max_year,
-        max_year,
-        label_visibility="collapsed",
-    )
-
-year_data = data[data[YEAR_COLUMN] == selected_year]
-coverage = year_data[MEASURE_COLUMN].notna().sum()
 countries = sorted(data[COUNTRY_COLUMN].dropna().unique())
 
+# Seed the slider before the map so the requested visual order stays map -> slider.
+st.session_state.setdefault("selected_year", PRODUCT_MAX_YEAR)
+selected_year = int(st.session_state["selected_year"])
+year_data = data[data[YEAR_COLUMN] == selected_year]
+coverage = year_data[MEASURE_COLUMN].notna().sum()
+
+# The selector changes the snapshot; the shared year keeps both views synchronized.
 map_data = prepare_map_data(year_data)
 fig = build_unemployment_map(map_data)
 with st.container(border=True):
-    st.markdown("**01 / GLOBAL SNAPSHOT**")
-    st.subheader(f"Unemployment across the world · {selected_year}")
+    heading, stat = st.columns([3.6, 1], vertical_alignment="bottom", gap="large")
+    with heading:
+        st.markdown("**01 / GLOBAL SNAPSHOT**")
+        st.subheader(f"Unemployment across the world · {selected_year}")
+        st.caption("Hover a country to read its unemployment rate and sector shares.")
+    with stat:
+        st.metric("Reported countries", f"{coverage}")
     st.plotly_chart(fig, width="stretch")
 
+with st.container(horizontal=True, vertical_alignment="center", gap="small", border=True):
+    st.markdown("**02 / MOVE THROUGH TIME**", width="content")
+    st.slider(
+        "Year",
+        PRODUCT_MIN_YEAR,
+        PRODUCT_MAX_YEAR,
+        key="selected_year",
+        label_visibility="collapsed",
+    )
+
 st.caption(f"{selected_year} · {coverage} countries with reported unemployment")
-selected_country = st.selectbox(
-    "Country for sector snapshot",
-    countries,
-    index=countries.index("United States") if "United States" in countries else 0,
-)
+
+with st.container(border=True):
+    selector_label, selector_control = st.columns([1.4, 2.6], vertical_alignment="center", gap="large")
+    with selector_label:
+        st.markdown("**03 / COUNTRY LENS**")
+        st.caption("Choose a country to see how its employment mix changes with the year.")
+    with selector_control:
+        selected_country = st.selectbox(
+            "Country for sector snapshot",
+            countries,
+            index=countries.index("United States") if "United States" in countries else 0,
+            label_visibility="collapsed",
+        )
+
 sector_snapshot = prepare_sector_snapshot(data, selected_country, selected_year)
 with st.container(border=True):
-    st.markdown("**02 / THE SHAPE OF WORK**")
+    st.markdown("**04 / THE SHAPE OF WORK**")
     st.subheader(f"Sector composition · {selected_country} · {selected_year}")
     st.caption("Employment shares for the selected country and year. Move the year slider to watch the mix shift.")
     st.plotly_chart(build_sector_snapshot(sector_snapshot, selected_year), width="stretch")
