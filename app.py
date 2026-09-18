@@ -229,8 +229,6 @@ with st.container(horizontal=True, vertical_alignment="center", gap="small", bor
         label_visibility="collapsed",
     )
 
-st.caption(f"{selected_year} · {coverage} countries with reported unemployment")
-
 with st.container(border=True):
     selector_label, selector_control = st.columns([1.4, 2.6], vertical_alignment="center", gap="large")
     with selector_label:
