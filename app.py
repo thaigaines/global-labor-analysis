@@ -266,6 +266,66 @@ def build_sector_snapshot(snapshot_data: pd.DataFrame, year: int):
     return fig
 
 
+def prepare_unemployment_trajectory(
+    data: pd.DataFrame, country: str, selected_year: int
+) -> pd.DataFrame:
+    """Return one country's complete year axis with explicit missing values."""
+    country_history = data.loc[
+        data[COUNTRY_COLUMN].eq(country), [YEAR_COLUMN, MEASURE_COLUMN]
+    ].set_index(YEAR_COLUMN)
+    trajectory = country_history.reindex(
+        range(PRODUCT_MIN_YEAR, PRODUCT_MAX_YEAR + 1)
+    ).rename_axis(YEAR_COLUMN).reset_index()
+    trajectory["Selected year"] = trajectory[YEAR_COLUMN].eq(selected_year)
+    return trajectory
+
+
+def build_unemployment_trajectory(trajectory_data: pd.DataFrame, selected_year: int):
+    """Build a raw unemployment-rate line with explicit missing-year gaps."""
+    plot_data = trajectory_data.dropna(subset=[MEASURE_COLUMN])
+    fig = px.line(
+        trajectory_data,
+        x=YEAR_COLUMN,
+        y=MEASURE_COLUMN,
+        markers=True,
+        labels={YEAR_COLUMN: "Year", MEASURE_COLUMN: "Unemployment rate (%)"},
+    )
+    fig.update_traces(
+        line={"color": "#73e6d1", "width": 3},
+        marker={"color": "#73e6d1", "size": 6},
+        connectgaps=False,
+        hovertemplate="%{x}: %{y:.2f}%<extra></extra>",
+        name="Unemployment rate",
+    )
+    selected_point = plot_data.loc[plot_data["Selected year"]]
+    if not selected_point.empty:
+        fig.add_scatter(
+            x=selected_point[YEAR_COLUMN],
+            y=selected_point[MEASURE_COLUMN],
+            mode="markers",
+            marker={"color": "#f0d264", "size": 12, "line": {"color": "#07111f", "width": 2}},
+            hovertemplate=f"{selected_year}: %{{y:.2f}}%<extra>Selected year</extra>",
+            name=f"Selected year · {selected_year}",
+        )
+    fig.add_vline(
+        x=selected_year,
+        line_color="#f0d264",
+        line_dash="dot",
+        line_width=1,
+    )
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="#07111f",
+        plot_bgcolor="#07111f",
+        height=330,
+        margin={"r": 20, "t": 20, "l": 10, "b": 10},
+        showlegend=False,
+    )
+    fig.update_yaxes(rangemode="tozero", ticksuffix="%", gridcolor="#26384b")
+    fig.update_xaxes(dtick=5, showgrid=False)
+    return fig
+
+
 st.set_page_config(page_title="Global Labor Explorer", page_icon=":material/public:", layout="wide")
 st.title("GLOBAL / LABOR", icon=":material/public:")
 st.subheader("Where unemployment shows up. How work is structured.")
@@ -349,8 +409,23 @@ with st.container(horizontal=True, gap="small", border=True):
     )
 
 sector_snapshot = prepare_sector_snapshot(data, selected_country, selected_year)
+trajectory = prepare_unemployment_trajectory(data, selected_country, selected_year)
+reported_years = int(trajectory[MEASURE_COLUMN].notna().sum())
+trajectory_span = f"{reported_years} of {len(trajectory)} years reported"
 with st.container(border=True):
-    st.markdown("**04 / THE SHAPE OF JOBS**")
+    st.markdown("**04 / THE TRAJECTORY**")
+    st.subheader(f"Unemployment trajectory · {selected_country}")
+    st.caption(
+        f"{trajectory_span}. The gold marker shows {selected_year}; gaps indicate no reported value. "
+        "Rates are descriptive associations, not evidence of causation."
+    )
+    st.plotly_chart(
+        build_unemployment_trajectory(trajectory, selected_year),
+        width="stretch",
+    )
+
+with st.container(border=True):
+    st.markdown("**05 / THE SHAPE OF JOBS**")
     st.subheader(f"Employment mix · {selected_country} · {selected_year}")
     st.caption("Sector values are shares, not job counts. Move the year slider to trace the mix over time.")
     st.plotly_chart(build_sector_snapshot(sector_snapshot, selected_year), width="stretch")

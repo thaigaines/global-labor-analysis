@@ -51,13 +51,36 @@ def main() -> None:
     assert list(snapshot["Sector"]) == ["Agriculture", "Industry", "Services"]
     assert len(app.build_sector_snapshot(snapshot, app.PRODUCT_MAX_YEAR).data) == 3
 
+    trajectory = app.prepare_unemployment_trajectory(
+        data, "United States", app.PRODUCT_MAX_YEAR
+    )
+    assert list(trajectory[app.YEAR_COLUMN]) == list(range(1991, 2023))
+    assert trajectory["Selected year"].sum() == 1
+    assert len(
+        app.build_unemployment_trajectory(
+            trajectory, app.PRODUCT_MAX_YEAR
+        ).data
+    ) >= 1
+    partial_history = data[data[app.COUNTRY_COLUMN].eq("United States")].drop(
+        data[data[app.COUNTRY_COLUMN].eq("United States")
+             & data[app.YEAR_COLUMN].eq(2000)].index
+    )
+    partial_trajectory = app.prepare_unemployment_trajectory(
+        partial_history, "United States", 2000
+    )
+    missing_year = partial_trajectory.loc[
+        partial_trajectory[app.YEAR_COLUMN].eq(2000)
+    ].iloc[0]
+    assert pd.isna(missing_year[app.MEASURE_COLUMN])
+    assert len(partial_trajectory) == app.PRODUCT_MAX_YEAR - app.PRODUCT_MIN_YEAR + 1
+
     app_test = AppTest.from_file("app.py").run()
     assert not app_test.exception
     assert len(app_test.slider) == 1
     assert app_test.slider[0].min == app.PRODUCT_MIN_YEAR
     assert app_test.slider[0].max == app.PRODUCT_MAX_YEAR
     assert len(app_test.selectbox) == 1
-    assert len(app_test.get("plotly_chart")) == 2
+    assert len(app_test.get("plotly_chart")) == 3
     assert any(metric.label == "Nominal GDP" for metric in app_test.metric)
     assert any("nominal GDP context" in caption.value for caption in app_test.caption)
     _assert_synchronized_headings(app_test, app.PRODUCT_MAX_YEAR)
@@ -66,21 +89,21 @@ def main() -> None:
     assert not app_test.exception
     assert len(app_test.slider) == 1
     assert len(app_test.selectbox) == 1
-    assert len(app_test.get("plotly_chart")) == 2
+    assert len(app_test.get("plotly_chart")) == 3
     _assert_synchronized_headings(app_test, app.PRODUCT_MIN_YEAR)
 
     app_test.slider[0].set_value(app.PRODUCT_MAX_YEAR).run()
     assert not app_test.exception
     assert len(app_test.slider) == 1
     assert len(app_test.selectbox) == 1
-    assert len(app_test.get("plotly_chart")) == 2
+    assert len(app_test.get("plotly_chart")) == 3
     _assert_synchronized_headings(app_test, app.PRODUCT_MAX_YEAR)
 
     app_test.selectbox[0].set_value("Afghanistan").run()
     assert not app_test.exception
     assert len(app_test.slider) == 1
     assert len(app_test.selectbox) == 1
-    assert len(app_test.get("plotly_chart")) == 2
+    assert len(app_test.get("plotly_chart")) == 3
 
     # The lookup seam must centralize country-year uniqueness and missing-row behavior.
     assert callable(getattr(app, "get_country_year_row", None))
