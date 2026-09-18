@@ -213,14 +213,14 @@ with st.container(border=True):
     heading, stat = st.columns([3.6, 1], vertical_alignment="bottom", gap="large")
     with heading:
         st.markdown("**01 / GLOBAL SNAPSHOT**")
-        st.subheader(f"Unemployment across the world · {selected_year}")
+        st.subheader(f"Unemployment across the world | {selected_year}")
         st.caption("Hover a country to read its unemployment rate and sector shares.")
     with stat:
         st.metric("Reported countries", f"{coverage}")
     st.plotly_chart(fig, width="stretch")
 
 with st.container(horizontal=True, vertical_alignment="center", gap="small", border=True):
-    st.markdown("**02 / MOVE THROUGH TIME**", width="content")
+    st.markdown("**02 / YEAR OVER YEAR**", width="content")
     st.slider(
         "Year",
         PRODUCT_MIN_YEAR,
@@ -246,8 +246,8 @@ with st.container(border=True):
 
 sector_snapshot = prepare_sector_snapshot(data, selected_country, selected_year)
 with st.container(border=True):
-    st.markdown("**04 / THE SHAPE OF WORK**")
-    st.subheader(f"Sector composition · {selected_country} · {selected_year}")
+    st.markdown("**04 / THE SHAPE OF JOBS**")
+    st.subheader(f"Sector composition | {selected_country} | {selected_year}")
     st.caption("Employment shares for the selected country and year. Move the year slider to watch the mix shift.")
     st.plotly_chart(build_sector_snapshot(sector_snapshot, selected_year), width="stretch")
 
