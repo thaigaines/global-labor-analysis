@@ -24,6 +24,16 @@ SECTOR_LABELS = {
     "Employment Sector: Industry": "Industry",
     "Employment Sector: Services": "Services",
 }
+SECTOR_DEFINITIONS = {
+    "Agriculture": "Farming, forestry, and fishing.",
+    "Industry": "Manufacturing, construction, utilities, and extraction.",
+    "Services": "Trade, transport, finance, education, health, and other services.",
+}
+SECTOR_BADGE_COLORS = {
+    "Agriculture": "orange",
+    "Industry": "blue",
+    "Services": "green",
+}
 REQUIRED_COLUMNS = [
     COUNTRY_COLUMN,
     YEAR_COLUMN,
@@ -288,7 +298,10 @@ with st.container(border=True):
     with heading:
         st.markdown("**01 / GLOBAL SNAPSHOT**")
         st.subheader(f"Where unemployment is reported · {selected_year}")
-        st.caption("Hover a country for unemployment, sector shares, and nominal GDP context.")
+        st.caption(
+            "Hover a country for unemployment, sector shares, and nominal GDP context. "
+            "The map scale is fixed at 0–20%; higher values use the endpoint color."
+        )
     with stat:
         st.metric("Reported countries", f"{coverage}")
     st.plotly_chart(fig, width="stretch")
@@ -331,7 +344,7 @@ with st.container(horizontal=True, gap="small", border=True):
     st.metric("Unemployment", country_unemployment, border=True)
     st.metric("Nominal GDP", country_gdp, border=True)
     st.caption(
-        "GDP is nominal USD and context only; sector values are shares, not job counts. "
+        "GDP is nominal USD context only; sector values are shares, not job counts. "
         "Reported measures describe association, not causation."
     )
 
@@ -341,6 +354,11 @@ with st.container(border=True):
     st.subheader(f"Employment mix · {selected_country} · {selected_year}")
     st.caption("Sector values are shares, not job counts. Move the year slider to trace the mix over time.")
     st.plotly_chart(build_sector_snapshot(sector_snapshot, selected_year), width="stretch")
+    definition_cards = st.columns(3, gap="small", border=True)
+    for card, sector in zip(definition_cards, SECTOR_DEFINITIONS):
+        with card:
+            st.markdown(f":{SECTOR_BADGE_COLORS[sector]}-badge[{sector}]")
+            st.caption(SECTOR_DEFINITIONS[sector])
 
 st.caption(
     f"Source: [Employment_Unemployment_GDP_data.csv]({SOURCE_URL}). "
