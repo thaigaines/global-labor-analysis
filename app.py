@@ -331,7 +331,6 @@ st.title("GLOBAL / LABOR", icon=":material/public:")
 st.subheader("Where unemployment shows up. How work is structured.")
 st.caption(
     "A country-level view of unemployment and employment structure from 1991 to 2022. "
-    "Relationships are associations, not proof of causation."
 )
 
 try:
@@ -359,7 +358,7 @@ with st.container(border=True):
         st.markdown("**01 / GLOBAL SNAPSHOT**")
         st.subheader(f"Where unemployment is reported · {selected_year}")
         st.caption(
-            "Hover a country for unemployment, sector shares, and nominal GDP context. "
+            "Hover over a country for unemployment, sector shares, and nominal GDP context. "
             "The map scale is fixed at 0–20%; higher values use the endpoint color."
         )
     with stat:
