@@ -404,7 +404,6 @@ with st.container(horizontal=True, gap="small", border=True):
     st.metric("Nominal GDP", country_gdp, border=True)
     st.caption(
         "GDP is nominal USD context only; sector values are shares, not job counts. "
-        "Reported measures describe association, not causation."
     )
 
 sector_snapshot = prepare_sector_snapshot(data, selected_country, selected_year)
@@ -416,7 +415,6 @@ with st.container(border=True):
     st.subheader(f"Unemployment trajectory · {selected_country}")
     st.caption(
         f"{trajectory_span}. The gold marker shows {selected_year}; gaps indicate no reported value. "
-        "Rates are descriptive associations, not evidence of causation."
     )
     st.plotly_chart(
         build_unemployment_trajectory(trajectory, selected_year),
