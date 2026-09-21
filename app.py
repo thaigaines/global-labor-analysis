@@ -162,9 +162,12 @@ def build_unemployment_map(map_data: pd.DataFrame, cap: float = MAP_CAP):
     )
     fig.update_coloraxes(
         colorbar={
-            "title": f"Unemployment rate (%)<br>Values above {cap:g}% use endpoint color",
+            "title": "Unemployment rate (%)",
             "tickvals": color_ticks,
-            "ticktext": [f"{value}%" for value in color_ticks],
+            "ticktext": [
+                f"{value:g}%+" if value == cap else f"{value:g}%"
+                for value in color_ticks
+            ],
             "ticks": "outside",
             "ticklen": 6,
             "tickwidth": 1,
@@ -219,15 +222,17 @@ def prepare_sector_snapshot(data: pd.DataFrame, country: str, year: int) -> pd.D
 
 
 def build_sector_snapshot(snapshot_data: pd.DataFrame, year: int):
-    """Build a vivid, comparable sector-share snapshot for one country-year."""
+    """Build compact sector bars on a fixed percentage scale."""
     plot_data = snapshot_data.dropna(subset=["Share"])
     missing_sectors = snapshot_data.loc[
         snapshot_data["Share"].isna(), "Sector"
     ].tolist()
+    zero_sectors = snapshot_data.loc[snapshot_data["Share"].eq(0), "Sector"].tolist()
     fig = px.bar(
         plot_data,
-        x="Sector",
-        y="Share",
+        x="Share",
+        y="Sector",
+        orientation="h",
         color="Sector",
         text="Share",
         color_discrete_map={
@@ -240,28 +245,48 @@ def build_sector_snapshot(snapshot_data: pd.DataFrame, year: int):
     )
     fig.update_traces(
         texttemplate="%{text:.1f}%",
-        textposition="outside",
-        hovertemplate=f"{year}<br>%{{x}}: %{{y:.1f}}%<extra></extra>",
+        textposition="auto",
+        hovertemplate=f"{year}<br>%{{y}}: %{{x:.1f}}%<extra></extra>",
     )
+    for trace in fig.data:
+        if trace.name in zero_sectors:
+            trace.textposition = "none"
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="#07111f",
         plot_bgcolor="#07111f",
-        margin={"r": 20, "t": 20, "l": 10, "b": 10},
+        height=240,
+        margin={"r": 30, "t": 15, "l": 10, "b": 10},
         showlegend=False,
     )
-    fig.update_yaxes(range=[0, 100], ticksuffix="%", gridcolor="#26384b")
-    fig.update_xaxes(showgrid=False)
-    if missing_sectors:
+    fig.update_xaxes(range=[0, 100], dtick=25, ticksuffix="%", gridcolor="#26384b")
+    fig.update_yaxes(
+        type="category",
+        categoryorder="array",
+        categoryarray=["Services", "Industry", "Agriculture"],
+        tickmode="array",
+        tickvals=list(SECTOR_LABELS.values()),
+        showgrid=False,
+        title=None,
+    )
+    for sector in missing_sectors:
         fig.add_annotation(
-            text=f"No data: {', '.join(missing_sectors)}",
-            xref="paper",
-            yref="paper",
-            x=0,
-            y=1.08,
+            text="No data",
+            x=2,
+            y=sector,
             showarrow=False,
             font={"color": "#a9b7c6", "size": 12},
             align="left",
+            xanchor="left",
+        )
+    for sector in zero_sectors:
+        fig.add_annotation(
+            text="0.0%",
+            x=2,
+            y=sector,
+            showarrow=False,
+            font={"color": "#f4f7f6", "size": 12},
+            xanchor="left",
         )
     return fig
 
@@ -293,6 +318,7 @@ def build_unemployment_trajectory(trajectory_data: pd.DataFrame, selected_year: 
     fig.update_traces(
         line={"color": "#73e6d1", "width": 3},
         marker={"color": "#73e6d1", "size": 6},
+        cliponaxis=False,
         connectgaps=False,
         hovertemplate="%{x}: %{y:.2f}%<extra></extra>",
         name="Unemployment rate",
@@ -304,6 +330,7 @@ def build_unemployment_trajectory(trajectory_data: pd.DataFrame, selected_year: 
             y=selected_point[MEASURE_COLUMN],
             mode="markers",
             marker={"color": "#f0d264", "size": 12, "line": {"color": "#07111f", "width": 2}},
+            cliponaxis=False,
             hovertemplate=f"{selected_year}: %{{y:.2f}}%<extra>Selected year</extra>",
             name=f"Selected year · {selected_year}",
         )
@@ -322,7 +349,12 @@ def build_unemployment_trajectory(trajectory_data: pd.DataFrame, selected_year: 
         showlegend=False,
     )
     fig.update_yaxes(rangemode="tozero", ticksuffix="%", gridcolor="#26384b")
-    fig.update_xaxes(dtick=5, showgrid=False)
+    fig.update_xaxes(
+        range=[PRODUCT_MIN_YEAR, PRODUCT_MAX_YEAR],
+        tickmode="array",
+        tickvals=[1991, 1995, 2000, 2005, 2010, 2015, 2020, 2022],
+        showgrid=False,
+    )
     return fig
 
 
@@ -341,80 +373,89 @@ except (FileNotFoundError, ValueError) as error:
 
 countries = sorted(data[COUNTRY_COLUMN].dropna().unique())
 
-# Seed the slider before the map so the requested visual order stays map -> slider.
-st.session_state.setdefault("selected_year", PRODUCT_MAX_YEAR)
-selected_year = int(st.session_state["selected_year"])
-year_data = data[data[YEAR_COLUMN] == selected_year]
-coverage = year_data.loc[
-    year_data[MEASURE_COLUMN].notna(), COUNTRY_COLUMN
-].nunique()
-
-# The selector changes the snapshot; the shared year keeps both views synchronized.
-map_data = prepare_map_data(year_data)
-fig = build_unemployment_map(map_data)
 with st.container(border=True):
+    section_label, year_control = st.columns(
+        [1.5, 1], vertical_alignment="center", gap="large"
+    )
+    with section_label:
+        st.markdown("**01 / GLOBAL SNAPSHOT**")
+    with year_control:
+        selected_year = st.slider(
+            "Explore a year",
+            PRODUCT_MIN_YEAR,
+            PRODUCT_MAX_YEAR,
+            value=PRODUCT_MAX_YEAR,
+            key="selected_year",
+        )
+    year_data = data[data[YEAR_COLUMN] == selected_year]
+    coverage = year_data.loc[
+        year_data[MEASURE_COLUMN].notna(), COUNTRY_COLUMN
+    ].nunique()
+    map_data = prepare_map_data(year_data)
     heading, stat = st.columns([3.6, 1], vertical_alignment="bottom", gap="large")
     with heading:
-        st.markdown("**01 / GLOBAL SNAPSHOT**")
         st.subheader(f"Where unemployment is reported · {selected_year}")
         st.caption(
-            "Hover over a country for unemployment, sector shares, and nominal GDP context. "
-            "The map scale is fixed at 0–20%; higher values use the endpoint color."
+            "Hover for unemployment, sector shares, and nominal GDP. "
+            "Colors stop at 20%: higher raw rates share the 20%+ endpoint color. "
+            "Gray means no reported rate."
         )
     with stat:
         st.metric("Reported countries", f"{coverage}")
-    st.plotly_chart(fig, width="stretch")
-
-with st.container(horizontal=True, vertical_alignment="center", gap="small", border=True):
-    st.markdown("**02 / YEAR OVER YEAR**", width="content")
-    st.slider(
-        "Year",
-        PRODUCT_MIN_YEAR,
-        PRODUCT_MAX_YEAR,
-        key="selected_year",
-        label_visibility="collapsed",
-    )
+    st.plotly_chart(build_unemployment_map(map_data), width="stretch")
 
 with st.container(border=True):
-    selector_label, selector_control = st.columns([1.4, 2.6], vertical_alignment="center", gap="large")
+    selector_label, selector_control = st.columns(
+        [1.4, 2.6], vertical_alignment="center", gap="large"
+    )
     with selector_label:
-        st.markdown("**03 / COUNTRY LENS**")
-        st.caption("Choose a country to see how its employment mix changes with the year.")
+        st.markdown("**02 / COUNTRY LENS**")
+        st.caption(
+            "Choose a country for its unemployment history and selected-year employment mix."
+        )
     with selector_control:
         selected_country = st.selectbox(
-            "Country for sector snapshot",
+            "Country",
             countries,
             index=countries.index("United States") if "United States" in countries else 0,
             label_visibility="collapsed",
         )
-
-selected_values = get_country_year_row(data, selected_country, selected_year)
-if selected_values is None:
-    country_unemployment = "No data"
-    country_gdp = "No data"
-else:
-    unemployment_value = selected_values.get(MEASURE_COLUMN)
-    country_unemployment = (
-        f"{unemployment_value:.2f}%" if pd.notna(unemployment_value) else "No data"
-    )
-    country_gdp = format_nominal_gdp(selected_values.get(GDP_COLUMN))
-
-with st.container(horizontal=True, gap="small", border=True):
-    st.metric("Unemployment", country_unemployment, border=True)
-    st.metric("Nominal GDP", country_gdp, border=True)
-    st.caption(
-        "GDP is nominal USD context only; sector values are shares, not job counts. "
-    )
+    selected_values = get_country_year_row(data, selected_country, selected_year)
+    if selected_values is None:
+        country_unemployment = "No data"
+        country_gdp = "No data"
+    else:
+        unemployment_value = selected_values.get(MEASURE_COLUMN)
+        country_unemployment = (
+            f"{unemployment_value:.2f}%" if pd.notna(unemployment_value) else "No data"
+        )
+        country_gdp = format_nominal_gdp(selected_values.get(GDP_COLUMN))
+    metrics = st.columns([1, 1, 2], gap="small")
+    with metrics[0]:
+        st.metric("Unemployment", country_unemployment, border=True)
+    with metrics[1]:
+        st.metric("Nominal GDP", country_gdp, border=True)
+    with metrics[2]:
+        st.caption(
+            f"{selected_year} snapshot. Nominal GDP is in USD; sector shares "
+            "describe the distribution of jobs, not job counts."
+        )
 
 sector_snapshot = prepare_sector_snapshot(data, selected_country, selected_year)
 trajectory = prepare_unemployment_trajectory(data, selected_country, selected_year)
 reported_years = int(trajectory[MEASURE_COLUMN].notna().sum())
 trajectory_span = f"{reported_years} of {len(trajectory)} years reported"
 with st.container(border=True):
-    st.markdown("**04 / THE TRAJECTORY**")
+    st.markdown("**03 / THE TRAJECTORY**")
     st.subheader(f"Unemployment trajectory · {selected_country}")
+    selected_rate = trajectory.loc[trajectory["Selected year"], MEASURE_COLUMN].iloc[0]
+    selected_year_note = (
+        f"The gold guide and dot mark {selected_year}."
+        if pd.notna(selected_rate)
+        else f"The gold guide marks {selected_year}; no rate was reported, so there is no dot."
+    )
     st.caption(
-        f"{trajectory_span}. The gold marker shows {selected_year}; gaps indicate no reported value. "
+        f"{trajectory_span}. {selected_year_note} Gaps indicate years with no reported rate."
     )
     st.plotly_chart(
         build_unemployment_trajectory(trajectory, selected_year),
@@ -422,9 +463,12 @@ with st.container(border=True):
     )
 
 with st.container(border=True):
-    st.markdown("**05 / THE SHAPE OF JOBS**")
+    st.markdown("**04 / THE SHAPE OF JOBS**")
     st.subheader(f"Employment mix · {selected_country} · {selected_year}")
-    st.caption("Sector values are shares, not job counts. Move the year slider to trace the mix over time.")
+    st.caption(
+        "Each bar is the share of employment in that sector, on a fixed 0–100% "
+        "scale. Missing shares are labeled No data."
+    )
     st.plotly_chart(build_sector_snapshot(sector_snapshot, selected_year), width="stretch")
     definition_cards = st.columns(3, gap="small", border=True)
     for card, sector in zip(definition_cards, SECTOR_DEFINITIONS):
@@ -434,7 +478,8 @@ with st.container(border=True):
 
 st.caption(
     f"Source: [Employment_Unemployment_GDP_data.csv]({SOURCE_URL}). "
-    "Values are descriptive unemployment rates; "
+    "Any relationships shown are associations, not evidence of causation; "
+    "unemployment rates are raw reported values; "
     "country coverage varies by year; sector values are shares rather than employment counts; "
     "GDP is nominal USD; neutral gray indicates no reported data, and values above 20% use the "
     "endpoint color while tooltips retain the raw rate."

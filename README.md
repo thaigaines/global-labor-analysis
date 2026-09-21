@@ -8,9 +8,9 @@ A map-led Streamlit explorer for studying unemployment rates, labor structure, a
 
 ## About the app
 
-The app pairs country-level unemployment on a world map with a selected-country sector snapshot. Use the year slider to compare reported unemployment across countries over time, and use the country selector to inspect agriculture, industry, and services shares for each year or move sequentially from country to country. The map uses a fixed color scale so the visual meaning of color stays consistent from year to year.
+The year slider above the world map compares reported unemployment across countries. Choose a country to see its raw unemployment trajectory from 1991 to 2022, with the chosen year marked, plus a compact three-sector snapshot for that year. The fixed map scale caps color at 20% while tooltips retain higher raw rates. Missing years remain gaps in the trajectory.
 
-Unemployment remains the map's only color measure; sector shares are shown as descriptive context and are not used to rank countries or imply causality. GDP is nominal USD context only, and sector values are shares rather than employment counts. Observed relationships are descriptive associations, not causal conclusions.
+Unemployment remains the map's only color measure; sector shares are descriptive context and are not used to rank countries or imply causality. GDP is nominal USD context only, and sector values are shares rather than employment counts. Observed relationships are associations, not causal conclusions.
 
 ## Run locally
 
@@ -26,5 +26,3 @@ python smoke_check.py
 ```
 
 The app is ready for Streamlit Community Cloud deployment from the repository root. The CSV must remain beside `app.py`.
-
-Version note: the current release uses a bolder, map-led visual direction with a selected-country sector snapshot, as documented in `AGENTS.md`.
