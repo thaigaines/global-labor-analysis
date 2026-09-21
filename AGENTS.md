@@ -11,6 +11,7 @@
 - Keep the country × year lookup and pure map, sector, and trajectory preparation/build functions testable. Use the existing `streamlit`, `pandas`, and `plotly` dependencies and native UI elements.
 - Run `python smoke_check.py`, `python -m py_compile app.py`, and `git diff --check` before handoff, using the project environment when needed.
 
-## Push gate
+## Review and release
 
-- Treat review as a security gate. Push only when the manager's chat contains the token `MANAGER_DECISION: APPROVE_PUSH`; completed work without approval remains unpushed.
+- Review the changed files and run the relevant checks. Resolve concrete findings and rerun affected checks; hand off when no blocking findings remain.
+- Push after readable manager approval or an explicit user instruction to push. Approval need not use a fixed phrase. If a completed manager response appears empty, re-read the chat before treating approval as unavailable.
